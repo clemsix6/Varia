@@ -1,0 +1,5 @@
+mov 1 ra
+mov 2 rb
+add rb ra
+print rb
+ret
