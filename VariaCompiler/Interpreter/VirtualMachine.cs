@@ -12,10 +12,13 @@ namespace VariaCompiler.Interpreter
         private int currentInstructionIndex;
 
         private readonly Regex movPattern = new(
-            @"^\s*mov\s+(""[^""]*""|\[\w+\]|\w+)\s+(\[\w+\]|\w+)\s*$", RegexOptions.IgnoreCase
+            @"^\s*mov\s+(""[^""]*""|\[\w+\]|\w+|\d+\.\d+)\s+(\[\w+\]|\w+)\s*$", RegexOptions.IgnoreCase
         );
         private readonly Regex addPattern = new(
             @"^\s*add\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex mulPattern = new(
+            @"^\s*mul\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
         );
         private readonly Regex pushPattern = new(
             @"^\s*push\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
@@ -100,6 +103,12 @@ namespace VariaCompiler.Interpreter
                     continue;
                 }
 
+                match = this.mulPattern.Match(instruction);
+                if (match.Success) {
+                    HandleMul(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
                 match = this.pushPattern.Match(instruction);
                 if (match.Success) {
                     HandlePush(match.Groups[1].Value);
@@ -145,6 +154,14 @@ namespace VariaCompiler.Interpreter
             var value1 = GetValue(src);
             var value2 = GetValue(dest);
             SetValue(dest, value1.Add(value2));
+        }
+
+
+        private void HandleMul(string src, string dest)
+        {
+            var value1 = GetValue(src);
+            var value2 = GetValue(dest);
+            SetValue(dest, value1.Mul(value2));
         }
 
 

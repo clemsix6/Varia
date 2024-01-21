@@ -10,7 +10,7 @@ public class Lexer
     {
         { TokenType.Keyword, new Regex(@"\b(func|var|return)\b") },
         { TokenType.Identifier, new Regex(@"[a-zA-Z_][a-zA-Z_0-9]*") },
-        { TokenType.Operator, new Regex(@"=|\+") },
+        { TokenType.Operator, new Regex(@"=|\+|\*") },
         { TokenType.LiteralNumber, new Regex(@"\d+(\.\d+)?") },
         { TokenType.Punctuation, new Regex(@"\(|\)|\{|\}|;") },
         { TokenType.FunctionCall, new Regex(@"[a-zA-Z_][a-zA-Z_0-9]*\s*\(") },

@@ -131,28 +131,20 @@ public class Register
 
     public Register Add(Register other)
     {
+        if (this.Type == RegisterType.String || other.Type == RegisterType.String) {
+            Set(GetStringValue() + other.GetStringValue());
+            return this;
+        }
         if (this.Type == RegisterType.Int && other.Type == RegisterType.Int) {
-            Set(this.IntValue!.Value + other.GetIntValue());
+            Set(GetIntValue() + other.GetIntValue());
             return this;
         }
         if (this.Type == RegisterType.Int && other.Type == RegisterType.Float) {
-            Set(this.IntValue!.Value + other.GetFloatValue());
-            return this;
-        }
-        if (this.Type == RegisterType.Int && other.Type == RegisterType.String) {
-            Set(this.IntValue!.Value + other.GetStringValue());
-            return this;
-        }
-        if (this.Type == RegisterType.Float && other.Type == RegisterType.String) {
-            Set(this.FloatValue!.Value + other.GetStringValue());
+            Set(GetIntValue() + other.GetFloatValue());
             return this;
         }
         if (this.Type == RegisterType.Float) {
             Set(this.FloatValue!.Value + other.GetFloatValue());
-            return this;
-        }
-        if (this.Type == RegisterType.String) {
-            Set(this.StringValue + other.GetStringValue());
             return this;
         }
         throw new InvalidOperationException("Cannot add register of type " + this.Type);
@@ -189,7 +181,7 @@ public class Register
 
     public Register Sub(Register other)
     {
-        if (this.Type == RegisterType.String)
+        if (this.Type == RegisterType.String || other.Type == RegisterType.String)
             throw new InvalidOperationException("Cannot subtract from string.");
         if (this.Type == RegisterType.Int && other.Type == RegisterType.Int) {
             this.IntValue -= other.GetIntValue();
@@ -209,6 +201,59 @@ public class Register
             return this;
         }
         throw new InvalidOperationException("Cannot subtract register of type " + this.Type);
+    }
+
+
+    public Register Mul(long value)
+    {
+        if (this.Type == RegisterType.String)
+            throw new InvalidOperationException("Cannot multiply string.");
+        if (this.Type == RegisterType.Int)
+            this.IntValue *= value;
+        else if (this.Type == RegisterType.Float)
+            this.FloatValue *= value;
+        else
+            this.IntValue = 0;
+        return this;
+    }
+
+
+    public Register Mul(double value)
+    {
+        if (this.Type == RegisterType.String)
+            throw new InvalidOperationException("Cannot multiply string.");
+        if (this.Type == RegisterType.Int)
+            this.FloatValue = this.IntValue * value;
+        else if (this.Type == RegisterType.Float)
+            this.FloatValue *= value;
+        else
+            this.IntValue = 0;
+        return this;
+    }
+
+
+    public Register Mul(Register other)
+    {
+        if (this.Type == RegisterType.String || other.Type == RegisterType.String)
+            throw new InvalidOperationException("Cannot multiply string.");
+        if (this.Type == RegisterType.Int && other.Type == RegisterType.Int) {
+            this.IntValue *= other.GetIntValue();
+            return this;
+        }
+        if (this.Type == RegisterType.Int && other.Type == RegisterType.Float) {
+            this.FloatValue = this.IntValue * other.GetFloatValue();
+            this.IntValue = null;
+            return this;
+        }
+        if (this.Type == RegisterType.Float && other.Type == RegisterType.Float) {
+            this.FloatValue *= other.GetFloatValue();
+            return this;
+        }
+        if (this.Type == RegisterType.Float && other.Type == RegisterType.Int) {
+            this.FloatValue *= other.GetIntValue();
+            return this;
+        }
+        throw new InvalidOperationException("Cannot multiply register of type " + this.Type);
     }
 
 
@@ -244,18 +289,6 @@ public class Register
     }
 
 
-    public string? GetStringValue()
-    {
-        if (this.StringValue != null)
-            return this.StringValue;
-        if (this.IntValue.HasValue)
-            return this.IntValue.Value.ToString(CultureInfo.InvariantCulture);
-        if (this.FloatValue.HasValue)
-            return this.FloatValue.Value.ToString(CultureInfo.InvariantCulture);
-        return null;
-    }
-
-
     public long GetIntValue()
     {
         if (this.IntValue.HasValue)
@@ -281,6 +314,18 @@ public class Register
         throw new InvalidOperationException(
             "Cannot get int value of register of type " + this.Type
         );
+    }
+
+
+    public string? GetStringValue()
+    {
+        if (this.StringValue != null)
+            return this.StringValue;
+        if (this.IntValue != null)
+            return this.IntValue.Value.ToString(CultureInfo.InvariantCulture);
+        if (this.FloatValue != null)
+            return this.FloatValue.Value.ToString(CultureInfo.InvariantCulture);
+        return null;
     }
 
 

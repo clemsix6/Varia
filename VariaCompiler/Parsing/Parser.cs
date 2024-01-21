@@ -127,32 +127,11 @@ public class Parser
     }
 
 
-    private AstNode ParseExpression()
-    {
-        var left = ParseTerm();
-
-        while (Match(TokenType.Operator)) {
-            var op = ConsumeToken();
-            var right = ParseTerm();
-
-            left = new BinaryOperationNode
-            {
-                Left = left,
-                Operator = op,
-                Right = right
-            };
-        }
-
-        return left;
-    }
-
-
-    private AstNode ParseTerm()
+    private AstNode ParseFactor()
     {
         if (Match(TokenType.Identifier)) {
             var lookahead = PeekNextToken();
-            if (lookahead.Type == TokenType.Punctuation &&
-                lookahead.Value == "(") {
+            if (lookahead.Type == TokenType.Punctuation && lookahead.Value == "(") {
                 return ParseFunctionCall();
             }
             var token = ConsumeToken();
@@ -166,7 +145,53 @@ public class Parser
             var token = ConsumeToken();
             return new LiteralNode { Value = token };
         }
+        if (Match(TokenType.Punctuation) && this.CurrentToken.Value == "(") {
+            ConsumeToken();
+            var expr = ParseExpression();
+            Expect(TokenType.Punctuation, "Expected ')'");
+            return expr;
+        }
         throw new Exception("Unexpected token");
+    }
+
+
+    private AstNode ParseTerm()
+    {
+        var left = ParseFactor();
+
+        while (Match(TokenType.Operator) && this.CurrentToken.Value is "*" or "/") {
+            var op = ConsumeToken();
+            var right = ParseFactor();
+
+            left = new BinaryOperationNode
+            {
+                Left = left,
+                Operator = op,
+                Right = right
+            };
+        }
+
+        return left;
+    }
+
+
+    private AstNode ParseExpression()
+    {
+        var left = ParseTerm();
+
+        while (Match(TokenType.Operator) && this.CurrentToken.Value is "+" or "-") {
+            var op = ConsumeToken();
+            var right = ParseTerm();
+
+            left = new BinaryOperationNode
+            {
+                Left = left,
+                Operator = op,
+                Right = right
+            };
+        }
+
+        return left;
     }
 
 
