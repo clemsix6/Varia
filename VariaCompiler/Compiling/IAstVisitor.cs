@@ -9,4 +9,5 @@ public interface IAstVisitor {
     void Visit(LiteralNode node);
     void Visit(ReturnNode node);
     void Visit(IdentifierNode node);
+    void Visit(FunctionCallNode node);
 }

@@ -4,6 +4,7 @@ using VariaCompiler.Lexing;
 using VariaCompiler.Parsing;
 using VariaCompiler.Parsing.Nodes;
 
+
 var lexer = new Lexer();
 var testContent = File.ReadAllText("test.vr");
 var tokens = lexer.Tokenize(testContent);
@@ -21,14 +22,20 @@ var blueCode = string.Join("\n", blueCodeInstructions);
 Console.WriteLine(blueCode);
 
 var vm = new VirtualMachine();
+var load = File.ReadAllLines("test.bc").ToList();
 var exitCode = vm.Execute(blueCodeInstructions);
 
 
-static void PrintAst(AstNode node, int level) {
+static void PrintAst(AstNode node, int level)
+{
     var indent = new string(' ', level * 4);
     Console.WriteLine(indent + node);
 
-    if (node is FunctionDeclarationNode funcNode) {
+    if (node is ProgramNode programNode) {
+        foreach (var child in programNode.Functions) {
+            PrintAst(child, level + 1);
+        }
+    } else if (node is FunctionDeclarationNode funcNode) {
         foreach (var child in funcNode.Body) {
             PrintAst(child, level + 1);
         }

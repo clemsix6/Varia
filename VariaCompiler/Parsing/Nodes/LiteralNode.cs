@@ -4,16 +4,18 @@ using VariaCompiler.Lexing;
 
 namespace VariaCompiler.Parsing.Nodes;
 
-public class LiteralNode : AstNode {
-    public Token Value { get; set; }
-    
-    
+
+public class LiteralNode : AstNode
+{
+    public Token Value { get; init; } = null!;
+
+
     public override string ToString()
     {
-        return $"LiteralNode ({Value})";
+        return $"LiteralNode ({this.Value})";
     }
-    
-    
+
+
     public override void Accept(IAstVisitor visitor)
     {
         visitor.Visit(this);

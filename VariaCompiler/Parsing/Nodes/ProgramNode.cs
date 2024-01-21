@@ -4,19 +4,18 @@ using VariaCompiler.Compiling;
 namespace VariaCompiler.Parsing.Nodes;
 
 
-public class ReturnNode : AstNode
+public class ProgramNode : AstNode
 {
-    public AstNode Value { get; init; } = null!;
+    public List<FunctionDeclarationNode> Functions { get; } = new();
 
 
     public override string ToString()
     {
-        return $"ReturnNode ({this.Value})";
+        return $"ProgramNode ({this.Functions.Count} functions)";
     }
 
 
     public override void Accept(IAstVisitor visitor)
     {
-        visitor.Visit(this);
     }
 }

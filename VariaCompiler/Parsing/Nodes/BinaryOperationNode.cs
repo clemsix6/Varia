@@ -4,19 +4,22 @@ using VariaCompiler.Lexing;
 
 namespace VariaCompiler.Parsing.Nodes;
 
-public class BinaryOperationNode : AstNode {
-    public AstNode Left { get; set; }
-    public Token Operator { get; set; }
-    public AstNode Right { get; set; }
+
+public class BinaryOperationNode : AstNode
+{
+    public AstNode Left { get; init; } = null!;
+    public Token Operator { get; init; } = null!;
+    public AstNode Right { get; init; } = null!;
 
 
     public override string ToString()
     {
-        return $"BinaryOperationNode ({Operator})";
+        return $"BinaryOperationNode ({this.Operator})";
     }
-    
-    
-    public override void Accept(IAstVisitor visitor) {
+
+
+    public override void Accept(IAstVisitor visitor)
+    {
         visitor.Visit(this);
     }
 }

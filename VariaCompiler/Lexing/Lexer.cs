@@ -6,20 +6,15 @@ namespace VariaCompiler.Lexing;
 
 public class Lexer
 {
-    private readonly Dictionary<TokenType, Regex> _patterns;
-
-
-    public Lexer()
+    private readonly Dictionary<TokenType, Regex> patterns = new()
     {
-        this._patterns = new Dictionary<TokenType, Regex>
-        {
-            { TokenType.Keyword, new Regex(@"\b(func|var|return)\b") },
-            { TokenType.Identifier, new Regex(@"[a-zA-Z_][a-zA-Z_0-9]*") },
-            { TokenType.Operator, new Regex(@"=|\+") },
-            { TokenType.LiteralNumber, new Regex(@"\d+(\.\d+)?") },
-            { TokenType.Punctuation, new Regex(@"\(|\)|\{|\}|;") }
-        };
-    }
+        { TokenType.Keyword, new Regex(@"\b(func|var|return)\b") },
+        { TokenType.Identifier, new Regex(@"[a-zA-Z_][a-zA-Z_0-9]*") },
+        { TokenType.Operator, new Regex(@"=|\+") },
+        { TokenType.LiteralNumber, new Regex(@"\d+(\.\d+)?") },
+        { TokenType.Punctuation, new Regex(@"\(|\)|\{|\}|;") },
+        { TokenType.FunctionCall, new Regex(@"[a-zA-Z_][a-zA-Z_0-9]*\s*\(") },
+    };
 
 
     public List<Token> Tokenize(string source)
@@ -29,7 +24,7 @@ public class Lexer
         while (!string.IsNullOrEmpty(source)) {
             var matched = false;
 
-            foreach (var pattern in this._patterns) {
+            foreach (var pattern in this.patterns) {
                 var match = pattern.Value.Match(source);
                 if (match.Success && match.Index == 0) {
                     tokens.Add(new Token(pattern.Key, match.Value));

@@ -1,5 +1,21 @@
-mov 1 ra
-mov 2 rb
-add rb ra
-print rb
+--test
+mov     1 ra
+mov     ra [0]
+mov     2 ra
+mov     ra [1]
+mov     [0] ra
+push    ra
+mov     [1] ra
+pop     rb
+add     rb ra
+mov     ra [2]
+ret
+--hello
+call    test
+mov     [0] ra
+mov     ra [1]
+ret
+--main
+call    hello
+mov     ra [0]
 ret

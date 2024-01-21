@@ -1,6 +1,18 @@
-func main() {
-    var x = 1.5
-    var y = 8.1
+func test() {
+    var x = 1
+    var y = 2
     var z = x + y
     return z
+}
+
+func hello() {
+    var x = test()
+    var y = 8.5
+    var z = x + y
+    return z
+}
+
+func main() {
+    var x = hello()
+    return x
 }

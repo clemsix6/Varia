@@ -6,12 +6,12 @@ namespace VariaCompiler.Parsing.Nodes;
 
 public class IdentifierNode : AstNode
 {
-    public Token Value { get; set; }
+    public Token Value { get; init; }= null!;
 
 
     public override string ToString()
     {
-        return $"IdentifierNode ({Value})";
+        return $"IdentifierNode ({this.Value})";
     }
 
 

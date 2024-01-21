@@ -6,5 +6,6 @@ public enum TokenType
     Identifier,
     Operator,
     LiteralNumber,
-    Punctuation
+    Punctuation,
+    FunctionCall,
 }

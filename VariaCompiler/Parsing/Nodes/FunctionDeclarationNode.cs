@@ -1,19 +1,23 @@
 using VariaCompiler.Compiling;
 
+
 namespace VariaCompiler.Parsing.Nodes;
 
-public class FunctionDeclarationNode : AstNode {
-    public string Name { get; set; }
-    public List<AstNode> Body { get; set; }
+
+public class FunctionDeclarationNode : AstNode
+{
+    public string Name { get; init; } = null!;
+    public List<AstNode> Body { get; init; }= null!;
 
 
     public override string ToString()
     {
-        return $"FunctionDeclarationNode ({Name})";
+        return $"FunctionDeclarationNode ({this.Name})";
     }
-    
-    
-    public override void Accept(IAstVisitor visitor) {
+
+
+    public override void Accept(IAstVisitor visitor)
+    {
         visitor.Visit(this);
     }
 }
