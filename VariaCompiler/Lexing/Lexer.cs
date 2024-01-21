@@ -8,7 +8,7 @@ public class Lexer
 {
     private readonly Dictionary<TokenType, Regex> patterns = new()
     {
-        { TokenType.Keyword, new Regex(@"\b(func|var|return|if|else)\b") },
+        { TokenType.Keyword, new Regex(@"\b(func|var|return|if|else|while|break)\b") },
         { TokenType.Identifier, new Regex(@"[a-zA-Z_][a-zA-Z_0-9]*") },
         { TokenType.ConditionalOperator, new Regex(@"==|<=|>=|!=|<|>") },
         { TokenType.Operator, new Regex(@"=|\+|\*") },

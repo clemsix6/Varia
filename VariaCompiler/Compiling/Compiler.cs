@@ -25,39 +25,7 @@ public class Compiler : IAstVisitor
         this.intermediateCode.Clear();
         foreach (var functionNode in programNode.Functions)
             functionNode.Accept(this);
-        OptimizeIntermediateCode();
         return GenerateMachineCode();
-    }
-
-
-    private void OptimizeIntermediateCode()
-    {
-        for (var i = 0; i < this.intermediateCode.Count - 1; i++) {
-            var currentInstr = this.intermediateCode[i];
-            var nextInstr = this.intermediateCode[i + 1];
-
-            if (currentInstr.Operation == Instruction.OpCode.Mov &&
-                nextInstr.Operation == Instruction.OpCode.Mov &&
-                currentInstr.Source == nextInstr.Destination &&
-                currentInstr.Destination == nextInstr.Source) {
-                this.intermediateCode.RemoveAt(i + 1);
-                i--;
-                continue;
-            }
-
-            if (currentInstr.Operation == Instruction.OpCode.Push &&
-                nextInstr.Operation == Instruction.OpCode.Pop) {
-                if (i + 2 < intermediateCode.Count) {
-                    var addInstr = intermediateCode[i + 2];
-                    if (addInstr.Operation == Instruction.OpCode.Add && addInstr.Source == "rb") {
-                        addInstr.Source = currentInstr.Source;
-                        this.intermediateCode.RemoveAt(i);
-                        this.intermediateCode.RemoveAt(i);
-                        i--;
-                    }
-                }
-            }
-        }
     }
 
 
@@ -152,6 +120,18 @@ public class Compiler : IAstVisitor
 
     public void Visit(BinaryOperationNode node)
     {
+        if (node.Operator.Value == "=") {
+            node.Right.Accept(this);
+            if (!this.variableMemoryMap.TryGetValue(
+                    ((IdentifierNode)node.Left).Value.Value, out var address
+                ))
+                throw new Exception(
+                    $"Undefined variable: {((IdentifierNode)node.Left).Value.Value}"
+                );
+            Emit(Instruction.OpCode.Mov, "ra", $"[{address}]");
+            return;
+        }
+
         node.Left.Accept(this);
         Emit(Instruction.OpCode.Push, "ra");
         node.Right.Accept(this);
@@ -170,6 +150,7 @@ public class Compiler : IAstVisitor
                 Emit(Instruction.OpCode.Div, "rb", "ra");
                 break;
         }
+        Emit(Instruction.OpCode.Push, "ra");
     }
 
 
@@ -222,6 +203,7 @@ public class Compiler : IAstVisitor
         }
     }
 
+
     public void Visit(ConditionalOperationNode node)
     {
         node.Left.Accept(this);
@@ -229,8 +211,7 @@ public class Compiler : IAstVisitor
         node.Right.Accept(this);
         Emit(Instruction.OpCode.Pop, null, "rb");
 
-        switch (node.Operator.Value)
-        {
+        switch (node.Operator.Value) {
             case "==":
                 Emit(Instruction.OpCode.CmpEq, "rb", "ra");
                 break;
@@ -250,5 +231,26 @@ public class Compiler : IAstVisitor
                 Emit(Instruction.OpCode.CmpGe, "rb", "ra");
                 break;
         }
+    }
+
+
+    public void Visit(WhileNode node)
+    {
+        var loopStartLabel = $"LOOP_START_{this.pointIndex++}";
+        var loopEndLabel = $"LOOP_END_{this.pointIndex++}";
+
+        Emit(Instruction.OpCode.Label, loopStartLabel);
+        node.Condition.Accept(this);
+        Emit(Instruction.OpCode.JmpIfNot, "ra", loopEndLabel);
+        foreach (var statement in node.Body)
+            statement.Accept(this);
+        Emit(Instruction.OpCode.Jmp, loopStartLabel);
+        Emit(Instruction.OpCode.Label, loopEndLabel);
+    }
+
+
+    public void Visit(BreakNode node)
+    {
+        Emit(Instruction.OpCode.Jmp, $"LOOP_END_{this.pointIndex - 2}");
     }
 }

@@ -112,6 +112,9 @@ namespace VariaCompiler.Interpreter
                 case "exit":
                     Environment.Exit((int)this.ra.GetIntValue());
                     return true;
+                case "sleep":
+                    Thread.Sleep((int)this.ra.GetFloatValue() * 1000);
+                    return true;
                 default:
                     return false;
             }

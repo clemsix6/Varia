@@ -1,9 +1,28 @@
 --main
-mov     18 ra
+mov     0 ra
 mov     ra [0]
-mov     "Hello, World!" ra
-mov     ra [1]
+mov     0 ra
+push    ra
+mov     0 ra
+pop     rb
+cmpeq   rb ra
+jne     ra PT_0
+mov     1 ra
+mov     ra [0]
+mov     2 ra
+mov     ra [0]
+mov     3 ra
+mov     ra [0]
 call    print
 push    ra
-mov     [0] ra
+mov     4 ra
+mov     ra [0]
+mov     ra [1]
+mov     [1] rb
+add     rb ra
+jmp     PT_1
+pt      PT_0
+mov     2 ra
+mov     ra [0]
+pt      PT_1
 ret

@@ -80,15 +80,46 @@ public class Parser
                     return ParseReturn();
                 case "if":
                     return ParseIf();
+                case "while":
+                    return ParseWhile();
+                case "break":
+                    return ParseBreak();
             }
         }
         if (Match(TokenType.Identifier)) {
             var lookahead = PeekNextToken();
             if (lookahead.Type == TokenType.Punctuation && lookahead.Value == "(")
                 return ParseFunctionCall();
-            throw new Exception("Unexpected identifier");
+            return ParseExpression();
         }
         throw new Exception($"Unexpected token: \"{this.CurrentToken.Value}\"");
+    }
+
+
+    private WhileNode ParseWhile()
+    {
+        Expect(TokenType.Keyword, "Expected 'while'");
+        var condition = ParseExpression();
+        Expect(TokenType.Punctuation, "Expected '{'");
+
+        var body = new List<AstNode>();
+        while (!(Match(TokenType.Punctuation) && this.CurrentToken.Value == "}")) {
+            body.Add(ParseStatement());
+        }
+        Expect(TokenType.Punctuation, "Expected '}'");
+
+        return new WhileNode
+        {
+            Condition = condition,
+            Body = body
+        };
+    }
+
+
+    private BreakNode ParseBreak()
+    {
+        Expect(TokenType.Keyword, "Expected 'break'");
+        return new BreakNode();
     }
 
 
@@ -191,24 +222,26 @@ public class Parser
         var left = ParseTerm();
 
         while (true) {
-            if (Match(TokenType.Operator) && this.CurrentToken.Value.Length == 1) {
+            if (Match(TokenType.Operator) &&
+                this.CurrentToken.Value.Length == 1 &&
+                this.CurrentToken.Value != "=") {
                 var op = ConsumeToken();
                 var right = ParseTerm();
                 left = new BinaryOperationNode { Left = left, Operator = op, Right = right };
-            }
-            else if (Match(TokenType.ConditionalOperator)) {
+            } else if (Match(TokenType.ConditionalOperator)) {
                 var op = ConsumeToken();
                 var right = ParseTerm();
                 left = new ConditionalOperationNode { Left = left, Operator = op, Right = right };
-            }
-            else {
+            } else if (Match(TokenType.Operator) && this.CurrentToken.Value == "=") {
+                var op = ConsumeToken();
+                var right = ParseExpression();
+                left = new BinaryOperationNode { Left = left, Operator = op, Right = right };
+            } else {
                 break;
             }
         }
-
         return left;
     }
-
 
 
     private ConditionNode ParseIf()

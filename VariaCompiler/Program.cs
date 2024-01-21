@@ -47,5 +47,10 @@ static void PrintAst(AstNode node, int level)
         PrintAst(binNode.Right, level + 1);
     } else if (node is ReturnNode returnNode) {
         PrintAst(returnNode.Value, level + 1);
+    } else if (node is WhileNode whileNode) {
+        PrintAst(whileNode.Condition, level + 1);
+        foreach (var child in whileNode.Body) {
+            PrintAst(child, level + 1);
+        }
     }
 }
