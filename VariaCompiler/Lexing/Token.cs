@@ -1,4 +1,4 @@
-namespace VariaCompiler.Lexer;
+namespace VariaCompiler.Lexing;
 
 public class Token {
     public TokenType Type { get; set; }
@@ -6,12 +6,12 @@ public class Token {
 
     
     public Token(TokenType type, string value) {
-        Type = type;
-        Value = value;
+        this.Type = type;
+        this.Value = value;
     }
 
     
     public override string ToString() {
-        return $"{Type}: {Value}";
+        return $"{this.Type}: {this.Value}";
     }
 }

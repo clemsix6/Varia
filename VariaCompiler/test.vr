@@ -1,6 +1,6 @@
 func main() {
-    var x = 1
-    var y = 8
+    var x = 1.5
+    var y = 8.1
     var z = x + y
     return z
 }

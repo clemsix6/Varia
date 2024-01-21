@@ -1,4 +1,4 @@
-using VariaCompiler.Lexer;
+using VariaCompiler.Lexing;
 using VariaCompiler.Parsing.Nodes;
 
 namespace VariaCompiler.Parsing;
@@ -94,7 +94,7 @@ public class Parser {
     }
 
     public AstNode ParseTerm() {
-        if (Match(TokenType.LiteralInt)) {
+        if (Match(TokenType.LiteralNumber)) {
             var token = ConsumeToken();
             return new LiteralNode { Value = token };
         } else if (Match(TokenType.Identifier)) {

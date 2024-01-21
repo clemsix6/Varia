@@ -1,10 +1,10 @@
-namespace VariaCompiler.Lexer;
+namespace VariaCompiler.Lexing;
 
 public enum TokenType
 {
     Keyword,
     Identifier,
     Operator,
-    LiteralInt,
+    LiteralNumber,
     Punctuation
 }

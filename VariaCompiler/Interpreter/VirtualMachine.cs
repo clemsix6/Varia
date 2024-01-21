@@ -1,146 +1,196 @@
 using System.Text.RegularExpressions;
 
-namespace BlueCodeInterpreter;
+
+namespace VariaCompiler.Interpreter;
+
 
 public class VirtualMachine
 {
-    private long ra, rb, rc, rd, re, rf, rg, rh, rsp;
-    private List<long> stack = new List<long>();
-    private Dictionary<long, long> memory = new Dictionary<long, long>();
-    private Dictionary<long, long> stackMemory = new Dictionary<long, long>();
+    private Register ra, rb, rc, rd, re, rf, rg, rh, rsp;
+    private List<Register> stack = new();
+    private Dictionary<long, Register> memory = new();
+    private Dictionary<long, Register> stackMemory = new();
 
-    public VirtualMachine() {
-        ra = rb = rc = rd = re = rf = rg = rh = rsp = 0;
+
+    public VirtualMachine()
+    {
+        this.ra = new Register();
+        this.rb = new Register();
+        this.rc = new Register();
+        this.rd = new Register();
+        this.re = new Register();
+        this.rf = new Register();
+        this.rg = new Register();
+        this.rh = new Register();
+        this.rsp = new Register(0);
     }
 
-    private Regex movPattern = new Regex(@"^\s*mov\s+([\w\d\[\]]+?)\s+([\w\d\[\]]+?)\s*$", RegexOptions.IgnoreCase);
-    private Regex addPattern = new Regex(@"^\s*add\s+([\w\d\[\]]+?)\s+([\w\d\[\]]+?)\s*$", RegexOptions.IgnoreCase);
-    private Regex pushPattern = new Regex(@"^\s*push\s+([\w\d\[\]]+?)\s*$", RegexOptions.IgnoreCase);
-    private Regex popPattern = new Regex(@"^\s*pop\s+([\w\d\[\]]+?)\s*$", RegexOptions.IgnoreCase);
-    private Regex printPattern = new Regex(@"^\s*print\s+([\w\d\[\]]+?)\s*$", RegexOptions.IgnoreCase);
-    private Regex retPattern = new Regex(@"^\s*ret\s*$", RegexOptions.IgnoreCase);
+
+    private readonly Regex movPattern = new(
+        @"^\s*mov\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+    );
+    private readonly Regex addPattern = new(
+        @"^\s*add\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+    );
+    private readonly Regex pushPattern = new(
+        @"^\s*push\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+    );
+    private readonly Regex popPattern = new(@"^\s*pop\s+([\w\d\[\]]+?)\s*$", RegexOptions.IgnoreCase);
+    private readonly Regex printPattern = new(
+        @"^\s*print\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+    );
+    private readonly Regex retPattern = new(@"^\s*ret\s*$", RegexOptions.IgnoreCase);
 
 
-
-    public void Execute(List<string> blueCodeInstructions) {
+    public string? Execute(List<string> blueCodeInstructions)
+    {
         foreach (var instruction in blueCodeInstructions) {
             Match match;
 
-            match = movPattern.Match(instruction);
+            match = this.movPattern.Match(instruction);
             if (match.Success) {
-                HandleMOV(match.Groups[1].Value, match.Groups[2].Value);
+                HandleMov(match.Groups[1].Value, match.Groups[2].Value);
                 continue;
             }
 
-            match = addPattern.Match(instruction);
+            match = this.addPattern.Match(instruction);
             if (match.Success) {
-                HandleADD(match.Groups[1].Value, match.Groups[2].Value);
+                HandleAdd(match.Groups[1].Value, match.Groups[2].Value);
                 continue;
             }
-            
-            match = pushPattern.Match(instruction);
+
+            match = this.pushPattern.Match(instruction);
             if (match.Success) {
-                HandlePUSH(match.Groups[1].Value);
+                HandlePush(match.Groups[1].Value);
                 continue;
             }
-            
-            match = popPattern.Match(instruction);
+
+            match = this.popPattern.Match(instruction);
             if (match.Success) {
-                HandlePOP(match.Groups[1].Value);
+                HandlePop(match.Groups[1].Value);
                 continue;
             }
-            
-            match = printPattern.Match(instruction);
+
+            match = this.printPattern.Match(instruction);
             if (match.Success) {
                 var value = GetValue(match.Groups[1].Value);
                 Console.WriteLine(value);
                 continue;
             }
-            
-            match = retPattern.Match(instruction);
+
+            match = this.retPattern.Match(instruction);
             if (match.Success) {
-                return;
+                return this.ra.GetStringValue();
             }
 
 
             throw new Exception($"Instruction {instruction} not recognized.");
         }
+        return this.ra.GetStringValue();
     }
 
-    private void HandleMOV(string src, string dest) {
+
+    private void HandleMov(string src, string dest)
+    {
         var value = GetValue(src);
         SetValue(dest, value);
     }
 
-    private void HandleADD(string src, string dest) {
+
+    private void HandleAdd(string src, string dest)
+    {
         var value1 = GetValue(src);
         var value2 = GetValue(dest);
-        SetValue(dest, value1 + value2);
+        SetValue(dest, value1.Add(value2));
     }
 
-    private void HandlePUSH(string src) {
+
+    private void HandlePush(string src)
+    {
         var value = GetValue(src);
-        stackMemory[rsp] = value;
-        rsp += 8;
+        this.stackMemory[this.rsp.GetIntValue()] = value;
+        this.rsp.Add(1);
     }
 
-    private void HandlePOP(string dest) {
-        rsp -= 8;
-        var value = stackMemory[rsp];
-        stackMemory.Remove(rsp);
+
+    private void HandlePop(string dest)
+    {
+        this.rsp.Sub(1);
+        var value = this.stackMemory[this.rsp.GetIntValue()];
+        this.stackMemory.Remove(this.rsp.GetIntValue());
         SetValue(dest, value);
     }
 
-    private long GetValue(string operand) {
-        if (operand == "rsp") {
-            return rsp;
-        }
-        
-        if (long.TryParse(operand, out var immediateValue)) {
-            return immediateValue;
-        }
 
+    private Register GetValue(string operand)
+    {
+        if (operand == "rsp")
+            return this.rsp.Clone();
+        if (double.TryParse(operand, out var immediateValue))
+            return new Register(immediateValue);
         if (operand.StartsWith("[") && operand.EndsWith("]")) {
             var address = long.Parse(operand.Trim('[', ']'));
-            return memory[address];
+            return this.memory[address].Clone();
         }
 
-        switch (operand) {
-            case "ra": return ra;
-            case "rb": return rb;
-            case "rc": return rc;
-            case "rd": return rd;
-            case "re": return re;
-            case "rf": return rf;
-            case "rg": return rg;
-            case "rh": return rh;
-            case "rsp": return rsp;
-            default: throw new Exception($"Operand {operand} not recognized.");
-        }
+        return operand switch
+        {
+            "ra" => this.ra.Clone(),
+            "rb" => this.rb.Clone(),
+            "rc" => this.rc.Clone(),
+            "rd" => this.rd.Clone(),
+            "re" => this.re.Clone(),
+            "rf" => this.rf.Clone(),
+            "rg" => this.rg.Clone(),
+            "rh" => this.rh.Clone(),
+            "rsp" => this.rsp.Clone(),
+            _ => throw new Exception($"Operand {operand} not recognized."),
+        };
     }
 
-    private void SetValue(string operand, long value) {
+
+    private void SetValue(string operand, Register value)
+    {
+        value = value.Clone();
         if (operand.StartsWith("[") && operand.EndsWith("]")) {
             operand = operand.Trim('[', ']');
             if (operand == "rsp") {
-                stackMemory[rsp] = value;
+                this.stackMemory[this.rsp.GetIntValue()] = value;
                 return;
             }
             var address = long.Parse(operand);
-            memory[address] = value;
+            this.memory[address] = value;
             return;
         }
 
         switch (operand) {
-            case "ra": ra = value; break;
-            case "rb": rb = value; break;
-            case "rc": rc = value; break;
-            case "rd": rd = value; break;
-            case "re": re = value; break;
-            case "rf": rf = value; break;
-            case "rg": rg = value; break;
-            case "rh": rh = value; break;
-            case "rsp": rsp = value; break;
+            case "ra":
+                this.ra = value;
+                break;
+            case "rb":
+                this.rb = value;
+                break;
+            case "rc":
+                this.rc = value;
+                break;
+            case "rd":
+                this.rd = value;
+                break;
+            case "re":
+                this.re = value;
+                break;
+            case "rf":
+                this.rf = value;
+                break;
+            case "rg":
+                this.rg = value;
+                break;
+            case "rh":
+                this.rh = value;
+                break;
+            case "rsp":
+                this.rsp = value;
+                break;
             default: throw new Exception($"Operand {operand} not recognized.");
         }
     }

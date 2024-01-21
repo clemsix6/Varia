@@ -1,5 +1,6 @@
 using VariaCompiler.Compiling;
-using VariaCompiler.Lexer;
+using VariaCompiler.Lexing;
+
 
 namespace VariaCompiler.Parsing.Nodes;
 

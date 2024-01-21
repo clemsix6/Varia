@@ -1,6 +1,6 @@
-﻿using BlueCodeInterpreter;
-using VariaCompiler.Compiling;
-using VariaCompiler.Lexer;
+﻿using VariaCompiler.Compiling;
+using VariaCompiler.Interpreter;
+using VariaCompiler.Lexing;
 using VariaCompiler.Parsing;
 using VariaCompiler.Parsing.Nodes;
 
@@ -20,9 +20,8 @@ var blueCodeInstructions = compiler.Compile(ast);
 var blueCode = string.Join("\n", blueCodeInstructions);
 Console.WriteLine(blueCode);
 
-var instructions = File.ReadAllLines("test.bc").ToList();
 var vm = new VirtualMachine();
-vm.Execute(instructions);
+var exitCode = vm.Execute(blueCodeInstructions);
 
 
 static void PrintAst(AstNode node, int level) {
@@ -42,3 +41,5 @@ static void PrintAst(AstNode node, int level) {
         PrintAst(returnNode.Value, level + 1);
     }
 }
+
+Console.WriteLine("\n\nExit code: " + exitCode + "\n\n");
