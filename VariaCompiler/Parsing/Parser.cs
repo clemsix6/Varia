@@ -61,6 +61,13 @@ public class Parser
                 body.Add(ParseVariableDeclaration());
             } else if (Match(TokenType.Keyword) && this.CurrentToken.Value == "return") {
                 body.Add(ParseReturn());
+            } else if (Match(TokenType.Identifier)) {
+                var lookahead = PeekNextToken();
+                if (lookahead.Type == TokenType.Punctuation && lookahead.Value == "(") {
+                    body.Add(ParseFunctionCall());
+                } else {
+                    ConsumeToken();
+                }
             } else {
                 ConsumeToken();
             }

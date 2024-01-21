@@ -19,11 +19,12 @@ Console.WriteLine("\n");
 var compiler = new Compiler();
 var blueCodeInstructions = compiler.Compile(ast);
 var blueCode = string.Join("\n", blueCodeInstructions);
-Console.WriteLine(blueCode);
+Console.WriteLine(blueCode + "\n\n");
 
 var vm = new VirtualMachine();
 var load = File.ReadAllLines("test.bc").ToList();
 var exitCode = vm.Execute(blueCodeInstructions);
+Console.WriteLine("Exit code: " + exitCode + "\n\n");
 
 
 static void PrintAst(AstNode node, int level)
@@ -48,5 +49,3 @@ static void PrintAst(AstNode node, int level)
         PrintAst(returnNode.Value, level + 1);
     }
 }
-
-Console.WriteLine("\n\nExit code: " + exitCode + "\n\n");

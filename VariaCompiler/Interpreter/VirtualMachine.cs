@@ -68,6 +68,21 @@ namespace VariaCompiler.Interpreter
         }
 
 
+        private bool ExecuteBuiltIn(string functionName)
+        {
+            switch (functionName) {
+                case "print":
+                    Console.WriteLine(this.ra.GetStringValue());
+                    return true;
+                case "exit":
+                    Environment.Exit((int)this.ra.GetIntValue());
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+
         private void ExecuteFunction(string functionName)
         {
             var instructions = this.functions[functionName];
@@ -165,7 +180,8 @@ namespace VariaCompiler.Interpreter
             this.stackMemory[this.rsp.GetIntValue()] =
                 new Register(this.currentInstructionIndex + 1);
             this.rsp.Add(1);
-            ExecuteFunction(functionName);
+            if (!ExecuteBuiltIn(functionName))
+                ExecuteFunction(functionName);
         }
 
 
