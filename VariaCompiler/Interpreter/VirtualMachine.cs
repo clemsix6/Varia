@@ -9,10 +9,13 @@ namespace VariaCompiler.Interpreter
         private readonly Dictionary<long, Register> memory = new();
         private readonly Dictionary<long, Register> stackMemory = new();
         private readonly Dictionary<string, List<string>> functions = new();
+        private readonly Dictionary<string, int> labelPositions = new();
         private int currentInstructionIndex;
 
+
         private readonly Regex movPattern = new(
-            @"^\s*mov\s+(""[^""]*""|\[\w+\]|\w+|\d+\.\d+)\s+(\[\w+\]|\w+)\s*$", RegexOptions.IgnoreCase
+            @"^\s*mov\s+(""[^""]*""|\[\w+\]|\w+|\d+\.\d+)\s+(\[\w+\]|\w+)\s*$",
+            RegexOptions.IgnoreCase
         );
         private readonly Regex addPattern = new(
             @"^\s*add\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
@@ -30,6 +33,31 @@ namespace VariaCompiler.Interpreter
         private readonly Regex callPattern = new(
             @"^\s*call\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
         );
+        private readonly Regex jmpPattern = new(
+            @"^\s*jmp\s+([a-zA-Z0-9_]+)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex jnePattern = new(
+            @"^\s*jne\s+(\w+)\s+([a-zA-Z0-9_]+)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex cmpEqPattern = new(
+            @"^\s*cmpeq\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex cmpNePattern = new(
+            @"^\s*cmpne\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex cmpLtPattern = new(
+            @"^\s*cmplt\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex cmpGtPattern = new(
+            @"^\s*cmpgt\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex cmpLePattern = new(
+            @"^\s*cmple\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex cmpGePattern = new(
+            @"^\s*cmpge\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+        );
+        private readonly Regex ptPattern = new(@"^\s*pt\s+(\w+)\s*$", RegexOptions.IgnoreCase);
 
 
         public VirtualMachine()
@@ -57,12 +85,19 @@ namespace VariaCompiler.Interpreter
         private void ParseFunctions(List<string> instructions)
         {
             var currentFunction = "";
+            int instructionIndex = 0;
             foreach (var instruction in instructions) {
                 if (instruction.StartsWith("--")) {
                     currentFunction = instruction[2..];
                     this.functions[currentFunction] = new List<string>();
+                    instructionIndex = 0;
                 } else {
+                    if (instruction.StartsWith("pt", StringComparison.OrdinalIgnoreCase)) {
+                        var label = instruction.Split()[1];
+                        labelPositions[label] = instructionIndex;
+                    }
                     this.functions[currentFunction].Add(instruction);
+                    instructionIndex++;
                 }
             }
         }
@@ -137,6 +172,59 @@ namespace VariaCompiler.Interpreter
                     continue;
                 }
 
+                match = this.jmpPattern.Match(instruction);
+                if (match.Success) {
+                    HandleJmp(match.Groups[1].Value);
+                    continue;
+                }
+
+                match = this.cmpEqPattern.Match(instruction);
+                if (match.Success) {
+                    HandleCmpEq(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
+                match = this.jnePattern.Match(instruction);
+                if (match.Success) {
+                    HandleJne(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
+                match = this.ptPattern.Match(instruction);
+                if (match.Success) {
+                    continue;
+                }
+
+                match = this.cmpNePattern.Match(instruction);
+                if (match.Success) {
+                    HandleCmpNe(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
+                match = this.cmpLtPattern.Match(instruction);
+                if (match.Success) {
+                    HandleCmpLt(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
+                match = this.cmpGtPattern.Match(instruction);
+                if (match.Success) {
+                    HandleCmpGt(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
+                match = this.cmpLePattern.Match(instruction);
+                if (match.Success) {
+                    HandleCmpLe(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
+                match = this.cmpGePattern.Match(instruction);
+                if (match.Success) {
+                    HandleCmpGe(match.Groups[1].Value, match.Groups[2].Value);
+                    continue;
+                }
+
                 throw new Exception($"Instruction '{instruction}' not recognized.");
             }
         }
@@ -189,6 +277,78 @@ namespace VariaCompiler.Interpreter
             this.rsp.Add(1);
             if (!ExecuteBuiltIn(functionName))
                 ExecuteFunction(functionName);
+        }
+
+
+        private void HandleJmp(string label)
+        {
+            if (this.labelPositions.TryGetValue(label, out var targetIndex)) {
+                this.currentInstructionIndex = targetIndex - 1;
+            } else {
+                throw new Exception($"Label '{label}' not found.");
+            }
+        }
+
+
+
+        private void HandleJne(string conditionOperand, string label)
+        {
+            var conditionValue = GetValue(conditionOperand);
+
+            if (conditionValue.GetIntValue() == 0) {
+                if (this.labelPositions.TryGetValue(label, out var targetIndex))
+                    this.currentInstructionIndex = targetIndex - 1;
+                else
+                    throw new Exception($"Label '{label}' not found.");
+            }
+        }
+
+
+        private void HandleCmpEq(string src, string dest)
+        {
+            var value1 = GetValue(src);
+            var value2 = GetValue(dest);
+            this.ra.Set(value1.Equals(value2) ? 1 : 0);
+        }
+
+
+        private void HandleCmpNe(string src, string dest)
+        {
+            var value1 = GetValue(src);
+            var value2 = GetValue(dest);
+            this.ra.Set(value1.Equals(value2) ? 0 : 1);
+        }
+
+
+        private void HandleCmpLt(string src, string dest)
+        {
+            var value1 = GetValue(src);
+            var value2 = GetValue(dest);
+            this.ra.Set(value1.LessThan(value2) ? 1 : 0);
+        }
+
+
+        private void HandleCmpGt(string src, string dest)
+        {
+            var value1 = GetValue(src);
+            var value2 = GetValue(dest);
+            this.ra.Set(value1.GreaterThan(value2) ? 1 : 0);
+        }
+
+
+        private void HandleCmpLe(string src, string dest)
+        {
+            var value1 = GetValue(src);
+            var value2 = GetValue(dest);
+            this.ra.Set(value1.LessThanOrEqual(value2) ? 1 : 0);
+        }
+
+
+        private void HandleCmpGe(string src, string dest)
+        {
+            var value1 = GetValue(src);
+            var value2 = GetValue(dest);
+            this.ra.Set(value1.GreaterThanOrEqual(value2) ? 1 : 0);
         }
 
 

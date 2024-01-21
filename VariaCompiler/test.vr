@@ -1,5 +1,9 @@
 func main() {
-    var x = 5 * (1 + 2)
-    print("Result: " + (x + 1))
+    var x = 5
+    if x > 6 {
+        print("Yes")
+    } else {
+        print("No")
+    }
     return x
 }

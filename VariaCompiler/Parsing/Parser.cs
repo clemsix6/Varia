@@ -57,27 +57,38 @@ public class Parser
         var body = new List<AstNode>();
         while (this.position < this.tokens.Count &&
                !(Match(TokenType.Punctuation) && this.CurrentToken.Value == "}")) {
-            if (Match(TokenType.Keyword) && this.CurrentToken.Value == "var") {
-                body.Add(ParseVariableDeclaration());
-            } else if (Match(TokenType.Keyword) && this.CurrentToken.Value == "return") {
-                body.Add(ParseReturn());
-            } else if (Match(TokenType.Identifier)) {
-                var lookahead = PeekNextToken();
-                if (lookahead.Type == TokenType.Punctuation && lookahead.Value == "(") {
-                    body.Add(ParseFunctionCall());
-                } else {
-                    ConsumeToken();
-                }
-            } else {
-                ConsumeToken();
-            }
+            body.Add(ParseStatement());
         }
         Expect(TokenType.Punctuation, "Expected '}'");
+
         return new FunctionDeclarationNode
         {
             Name = functionName,
             Body = body
         };
+    }
+
+
+    private AstNode ParseStatement()
+    {
+        if (Match(TokenType.Keyword)) {
+            var keyword = this.CurrentToken.Value;
+            switch (keyword) {
+                case "var":
+                    return ParseVariableDeclaration();
+                case "return":
+                    return ParseReturn();
+                case "if":
+                    return ParseIf();
+            }
+        }
+        if (Match(TokenType.Identifier)) {
+            var lookahead = PeekNextToken();
+            if (lookahead.Type == TokenType.Punctuation && lookahead.Value == "(")
+                return ParseFunctionCall();
+            throw new Exception("Unexpected identifier");
+        }
+        throw new Exception($"Unexpected token: \"{this.CurrentToken.Value}\"");
     }
 
 
@@ -179,19 +190,56 @@ public class Parser
     {
         var left = ParseTerm();
 
-        while (Match(TokenType.Operator) && this.CurrentToken.Value is "+" or "-") {
-            var op = ConsumeToken();
-            var right = ParseTerm();
-
-            left = new BinaryOperationNode
-            {
-                Left = left,
-                Operator = op,
-                Right = right
-            };
+        while (true) {
+            if (Match(TokenType.Operator) && this.CurrentToken.Value.Length == 1) {
+                var op = ConsumeToken();
+                var right = ParseTerm();
+                left = new BinaryOperationNode { Left = left, Operator = op, Right = right };
+            }
+            else if (Match(TokenType.ConditionalOperator)) {
+                var op = ConsumeToken();
+                var right = ParseTerm();
+                left = new ConditionalOperationNode { Left = left, Operator = op, Right = right };
+            }
+            else {
+                break;
+            }
         }
 
         return left;
+    }
+
+
+
+    private ConditionNode ParseIf()
+    {
+        Expect(TokenType.Keyword, "Expected 'if'");
+        var condition = ParseExpression();
+        Expect(TokenType.Punctuation, "Expected '{'");
+
+        var thenBranch = new List<AstNode>();
+        while (!(Match(TokenType.Punctuation) && this.CurrentToken.Value == "}")) {
+            thenBranch.Add(ParseStatement());
+        }
+        Expect(TokenType.Punctuation, "Expected '}'");
+
+        List<AstNode> elseBranch = null;
+        if (Match(TokenType.Keyword) && this.CurrentToken.Value == "else") {
+            ConsumeToken();
+            Expect(TokenType.Punctuation, "Expected '{'");
+            elseBranch = new List<AstNode>();
+            while (!(Match(TokenType.Punctuation) && this.CurrentToken.Value == "}")) {
+                elseBranch.Add(ParseStatement());
+            }
+            Expect(TokenType.Punctuation, "Expected '}'");
+        }
+
+        return new ConditionNode
+        {
+            Condition = condition,
+            ThenBranch = thenBranch,
+            ElseBranch = elseBranch
+        };
     }
 
 

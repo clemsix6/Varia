@@ -9,6 +9,7 @@ public class Compiler : IAstVisitor
     private readonly List<Instruction> intermediateCode = new();
     private readonly Dictionary<string, long> variableMemoryMap = new();
     private long nextMemoryAddress = 0;
+    private long pointIndex = 0;
 
 
     private void Emit(Instruction.OpCode op, string? src = null, string? dest = null)
@@ -95,6 +96,33 @@ public class Compiler : IAstVisitor
                 case Instruction.OpCode.Ret:
                     machineCode.Add("ret");
                     break;
+                case Instruction.OpCode.JmpIfNot:
+                    machineCode.Add($"jne\t{instr.Source} {instr.Destination}");
+                    break;
+                case Instruction.OpCode.Label:
+                    machineCode.Add($"pt\t{instr.Source}");
+                    break;
+                case Instruction.OpCode.Jmp:
+                    machineCode.Add($"jmp\t{instr.Source}");
+                    break;
+                case Instruction.OpCode.CmpEq:
+                    machineCode.Add($"cmpeq\t{instr.Source} {instr.Destination}");
+                    break;
+                case Instruction.OpCode.CmpNe:
+                    machineCode.Add($"cmpne\t{instr.Source} {instr.Destination}");
+                    break;
+                case Instruction.OpCode.CmpLt:
+                    machineCode.Add($"cmplt\t{instr.Source} {instr.Destination}");
+                    break;
+                case Instruction.OpCode.CmpGt:
+                    machineCode.Add($"cmpgt\t{instr.Source} {instr.Destination}");
+                    break;
+                case Instruction.OpCode.CmpLe:
+                    machineCode.Add($"cmple\t{instr.Source} {instr.Destination}");
+                    break;
+                case Instruction.OpCode.CmpGe:
+                    machineCode.Add($"cmpge\t{instr.Source} {instr.Destination}");
+                    break;
             }
         }
 
@@ -106,6 +134,7 @@ public class Compiler : IAstVisitor
     {
         this.variableMemoryMap.Clear();
         this.nextMemoryAddress = 0;
+        this.pointIndex = 0;
         Emit(Instruction.OpCode.Def, node.Name);
         foreach (var statement in node.Body)
             statement.Accept(this);
@@ -171,5 +200,55 @@ public class Compiler : IAstVisitor
             arg.Accept(this);
         Emit(Instruction.OpCode.Call, node.FunctionName);
         Emit(Instruction.OpCode.Push, "ra");
+    }
+
+
+    public void Visit(ConditionNode node)
+    {
+        node.Condition.Accept(this);
+        var endIfLabel = $"PT_{this.pointIndex++}";
+        Emit(Instruction.OpCode.JmpIfNot, "ra", endIfLabel);
+        foreach (var statement in node.ThenBranch)
+            statement.Accept(this);
+        if (node.ElseBranch != null && node.ElseBranch.Any()) {
+            var elseLabel = $"PT_{this.pointIndex++}";
+            Emit(Instruction.OpCode.Jmp, elseLabel);
+            Emit(Instruction.OpCode.Label, endIfLabel);
+            foreach (var statement in node.ElseBranch)
+                statement.Accept(this);
+            Emit(Instruction.OpCode.Label, elseLabel);
+        } else {
+            Emit(Instruction.OpCode.Label, endIfLabel);
+        }
+    }
+
+    public void Visit(ConditionalOperationNode node)
+    {
+        node.Left.Accept(this);
+        Emit(Instruction.OpCode.Push, "ra");
+        node.Right.Accept(this);
+        Emit(Instruction.OpCode.Pop, null, "rb");
+
+        switch (node.Operator.Value)
+        {
+            case "==":
+                Emit(Instruction.OpCode.CmpEq, "rb", "ra");
+                break;
+            case "!=":
+                Emit(Instruction.OpCode.CmpNe, "rb", "ra");
+                break;
+            case "<":
+                Emit(Instruction.OpCode.CmpLt, "rb", "ra");
+                break;
+            case ">":
+                Emit(Instruction.OpCode.CmpGt, "rb", "ra");
+                break;
+            case "<=":
+                Emit(Instruction.OpCode.CmpLe, "rb", "ra");
+                break;
+            case ">=":
+                Emit(Instruction.OpCode.CmpGe, "rb", "ra");
+                break;
+        }
     }
 }

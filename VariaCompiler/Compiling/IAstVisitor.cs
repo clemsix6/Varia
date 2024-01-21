@@ -10,4 +10,6 @@ public interface IAstVisitor {
     void Visit(ReturnNode node);
     void Visit(IdentifierNode node);
     void Visit(FunctionCallNode node);
+    void Visit(ConditionNode node);
+    void Visit(ConditionalOperationNode node);
 }

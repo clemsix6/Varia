@@ -335,4 +335,80 @@ public class Register
         clone.Set(this);
         return clone;
     }
+
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is Register other) {
+            if (this.Type != other.Type)
+                return false;
+            return this.Type switch
+            {
+                RegisterType.Int => GetIntValue() == other.GetIntValue(),
+                RegisterType.Float => GetFloatValue() == other.GetFloatValue(),
+                RegisterType.String => GetStringValue() == other.GetStringValue(),
+                RegisterType.Null => true,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+        return false;
+    }
+
+
+    protected bool Equals(Register other)
+    {
+        return this.IntValue == other.IntValue &&
+               Nullable.Equals(this.FloatValue, other.FloatValue) &&
+               this.StringValue == other.StringValue;
+    }
+
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(GetIntValue(), GetFloatValue(), GetStringValue());
+    }
+
+
+    public bool LessThan(Register other)
+    {
+        return this.Type switch
+        {
+            RegisterType.Int => this.GetIntValue() < other.GetIntValue(),
+            RegisterType.Float => this.GetFloatValue() < other.GetFloatValue(),
+            RegisterType.String => string.Compare(
+                                       this.GetStringValue(), other.GetStringValue(),
+                                       StringComparison.Ordinal
+                                   ) <
+                                   0,
+            _ => throw new InvalidOperationException("Cannot compare Null type.")
+        };
+    }
+
+
+    public bool GreaterThan(Register other)
+    {
+        return this.Type switch
+        {
+            RegisterType.Int => this.GetIntValue() > other.GetIntValue(),
+            RegisterType.Float => this.GetFloatValue() > other.GetFloatValue(),
+            RegisterType.String => string.Compare(
+                                       this.GetStringValue(), other.GetStringValue(),
+                                       StringComparison.Ordinal
+                                   ) >
+                                   0,
+            _ => throw new InvalidOperationException("Cannot compare Null type.")
+        };
+    }
+
+
+    public bool LessThanOrEqual(Register other)
+    {
+        return LessThan(other) || Equals(other);
+    }
+
+
+    public bool GreaterThanOrEqual(Register other)
+    {
+        return GreaterThan(other) || Equals(other);
+    }
 }
