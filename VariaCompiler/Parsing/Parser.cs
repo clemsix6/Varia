@@ -151,19 +151,21 @@ public class Parser
     {
         if (Match(TokenType.Identifier)) {
             var lookahead = PeekNextToken();
-            if (lookahead != null &&
-                lookahead.Type == TokenType.Punctuation &&
+            if (lookahead.Type == TokenType.Punctuation &&
                 lookahead.Value == "(") {
                 return ParseFunctionCall();
-            } else {
-                var token = ConsumeToken();
-                return new IdentifierNode { Value = token };
             }
-        } else if (Match(TokenType.LiteralNumber)) {
+            var token = ConsumeToken();
+            return new IdentifierNode { Value = token };
+        }
+        if (Match(TokenType.LiteralNumber)) {
             var token = ConsumeToken();
             return new LiteralNode { Value = token };
         }
-
+        if (Match(TokenType.LiteralString)) {
+            var token = ConsumeToken();
+            return new LiteralNode { Value = token };
+        }
         throw new Exception("Unexpected token");
     }
 

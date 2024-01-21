@@ -12,7 +12,7 @@ namespace VariaCompiler.Interpreter
         private int currentInstructionIndex;
 
         private readonly Regex movPattern = new(
-            @"^\s*mov\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
+            @"^\s*mov\s+(""[^""]*""|\[\w+\]|\w+)\s+(\[\w+\]|\w+)\s*$", RegexOptions.IgnoreCase
         );
         private readonly Regex addPattern = new(
             @"^\s*add\s+([\w\d\[\].]+?)\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
@@ -22,9 +22,6 @@ namespace VariaCompiler.Interpreter
         );
         private readonly Regex popPattern = new(
             @"^\s*pop\s+([\w\d\[\]]+?)\s*$", RegexOptions.IgnoreCase
-        );
-        private readonly Regex printPattern = new(
-            @"^\s*print\s+([\w\d\[\].]+?)\s*$", RegexOptions.IgnoreCase
         );
         private readonly Regex retPattern = new(@"^\s*ret\s*$", RegexOptions.IgnoreCase);
         private readonly Regex callPattern = new(
@@ -115,13 +112,6 @@ namespace VariaCompiler.Interpreter
                     continue;
                 }
 
-                match = this.printPattern.Match(instruction);
-                if (match.Success) {
-                    var value = GetValue(match.Groups[1].Value);
-                    Console.WriteLine(value);
-                    continue;
-                }
-
                 match = this.retPattern.Match(instruction);
                 if (match.Success) {
                     if (functionName != "main") {
@@ -195,6 +185,9 @@ namespace VariaCompiler.Interpreter
                 var address = long.Parse(operand.Trim('[', ']'));
                 return this.memory[address].Clone();
             }
+            if (operand.StartsWith("\"") && operand.EndsWith("\"")) {
+                return new Register(operand.Trim('\"'));
+            }
 
             return operand switch
             {
@@ -228,31 +221,31 @@ namespace VariaCompiler.Interpreter
 
             switch (operand) {
                 case "ra":
-                    this.ra = value;
+                    this.ra.Set(value);
                     break;
                 case "rb":
-                    this.rb = value;
+                    this.rb.Set(value);
                     break;
                 case "rc":
-                    this.rc = value;
+                    this.rc.Set(value);
                     break;
                 case "rd":
-                    this.rd = value;
+                    this.rd.Set(value);
                     break;
                 case "re":
-                    this.re = value;
+                    this.re.Set(value);
                     break;
                 case "rf":
-                    this.rf = value;
+                    this.rf.Set(value);
                     break;
                 case "rg":
-                    this.rg = value;
+                    this.rg.Set(value);
                     break;
                 case "rh":
-                    this.rh = value;
+                    this.rh.Set(value);
                     break;
                 case "rsp":
-                    this.rsp = value;
+                    this.rsp.Set(value);
                     break;
                 default:
                     throw new Exception($"Operand '{operand}' not recognized.");

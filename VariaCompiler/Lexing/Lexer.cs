@@ -14,6 +14,7 @@ public class Lexer
         { TokenType.LiteralNumber, new Regex(@"\d+(\.\d+)?") },
         { TokenType.Punctuation, new Regex(@"\(|\)|\{|\}|;") },
         { TokenType.FunctionCall, new Regex(@"[a-zA-Z_][a-zA-Z_0-9]*\s*\(") },
+        { TokenType.LiteralString, new Regex("\".*?\"") }
     };
 
 
@@ -23,7 +24,6 @@ public class Lexer
 
         while (!string.IsNullOrEmpty(source)) {
             var matched = false;
-
             foreach (var pattern in this.patterns) {
                 var match = pattern.Value.Match(source);
                 if (match.Success && match.Index == 0) {

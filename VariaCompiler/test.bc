@@ -1,21 +1,9 @@
---test
-mov     1 ra
-mov     ra [0]
-mov     2 ra
-mov     ra [1]
-mov     [0] ra
-push    ra
-mov     [1] ra
-pop     rb
-add     rb ra
-mov     ra [2]
-ret
---hello
-call    test
-mov     [0] ra
-mov     ra [1]
-ret
 --main
-call    hello
+mov     18 ra
 mov     ra [0]
+mov     "Hello, World!" ra
+mov     ra [1]
+call    print
+push    ra
+mov     [0] ra
 ret

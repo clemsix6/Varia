@@ -1,8 +1,6 @@
 func main() {
     var x = 18
-    var y = 64
-    var z = 128
-    exit(y)
-    print()
+    var y = "X = "
+    print(y + x)
     return x
 }
