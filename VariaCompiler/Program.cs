@@ -6,7 +6,7 @@ using VariaCompiler.Parsing.Nodes;
 
 
 var lexer = new Lexer();
-var testContent = File.ReadAllText("test.vr");
+var testContent = File.ReadAllText("test_floats.vr");
 var tokens = lexer.Tokenize(testContent);
 Console.WriteLine(string.Join("\n", tokens) + "\n\n");
 
@@ -22,7 +22,6 @@ var blueCode = string.Join("\n", blueCodeInstructions);
 Console.WriteLine(blueCode + "\n\n");
 
 var vm = new VirtualMachine();
-var load = File.ReadAllLines("test.bc").ToList();
 var exitCode = vm.Execute(blueCodeInstructions);
 Console.WriteLine("Exit code: " + exitCode + "\n\n");
 

@@ -8,10 +8,22 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Update="test.vr">
+      <None Update="test_loop.vr">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="test.bc">
+      <None Update="test_basics.vr">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="test_conditions.vr">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="test_strings.vr">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="test_functions.vr">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="test_floats.vr">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>

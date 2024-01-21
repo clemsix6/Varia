@@ -1,0 +1,17 @@
+func f() {
+    return 5
+}
+
+func g() {
+    return 15
+}
+
+func main() {
+    var x = f()
+    var y = g()
+
+    print(x)
+    print(y)
+
+    return x + y
+}

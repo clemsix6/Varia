@@ -1,0 +1,7 @@
+func main() {
+    var start = "hello "
+    var mid = 19
+    var end = " world"
+    print(start + mid + end)
+    return 0
+}
