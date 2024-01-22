@@ -78,14 +78,14 @@ namespace VariaCompiler.Interpreter
         {
             ParseFunctions(blueCodeInstructions);
             ExecuteFunction("main");
-            return ra.GetStringValue();
+            return this.ra.GetStringValue();
         }
 
 
         private void ParseFunctions(List<string> instructions)
         {
             var currentFunction = "";
-            int instructionIndex = 0;
+            var instructionIndex = 0;
             foreach (var instruction in instructions) {
                 if (instruction.StartsWith("--")) {
                     currentFunction = instruction[2..];
